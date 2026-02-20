@@ -5,7 +5,7 @@ version 'unspecified'
 
 jar {
     manifest {
-        attributes["Main-Class"] = 'com/majeur/inputmethod/tools/emoji/MakeEmojiKeys'
+        attributes["Main-Class"] = 'com.majeur.inputmethod.tools.emoji.MakeEmojiKeys'
     }
     from {
         configurations.runtimeClasspath.collect {
@@ -17,8 +17,8 @@ jar {
 }
 
 task makeEmoji(type: JavaExec, dependsOn: ['jar']) {
-    main = '-jar'
-    args jar.archiveFile.get()
+    mainClass.set("com.majeur.inputmethod.tools.emoji.MakeEmojiKeys")
+    classpath = sourceSets.main.runtimeClasspath
     args '-assets'
     args project.rootProject.project('app').projectDir.path + File.separator + 'src' +
             File.separator + 'main' + File.separator + 'assets' + File.separator + 'emoji'

@@ -54,17 +54,20 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             applicationIdSuffix = ".debug"
         }
-        base.archivesBaseName = "HeliBoard_" + defaultConfig.versionName
+
         // got a little too big for GitHub after some dependency upgrades, so we remove the largest dictionary
         androidComponents.onVariants { variant: ApplicationVariant ->
             if (variant.buildType == "debug") {
                 variant.androidResources.ignoreAssetsPatterns = listOf("main_ro.dict")
-                variant.proguardFiles = emptyList()
-                //noinspection ProguardAndroidTxtUsage we intentionally use the "normal" file here
-                variant.proguardFiles.add(project.layout.buildDirectory.file(getDefaultProguardFile("proguard-android.txt").absolutePath))
-                variant.proguardFiles.add(project.layout.buildDirectory.file(project.buildFile.parent + "/proguard-rules.pro"))
+                variant.proguardFiles.set(emptyList())
+                variant.proguardFiles.add(project.layout.projectDirectory.file(getDefaultProguardFile("proguard-android-optimize.txt").absolutePath))
+                variant.proguardFiles.add(project.layout.projectDirectory.file(project.buildFile.parent + "/proguard-rules.pro"))
             }
         }
+    }
+
+    base {
+        archivesName.set("HeliBoard_${defaultConfig.versionName}")
     }
 
     buildFeatures {
