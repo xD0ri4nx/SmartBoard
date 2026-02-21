@@ -531,6 +531,7 @@ public class LatinIME extends InputMethodService implements
         mSettings.startListener();
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();
+        TranslationManager.getInstance().init();
         AudioAndHapticFeedbackManager.init(this);
         AccessibilityUtils.init(this);
         mStatsUtilsManager.onCreate(this, mDictionaryFacilitator);
