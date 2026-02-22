@@ -24,3 +24,19 @@ fun LatinIME.getCurrentFullText(): String {
     Log.d("GetText", "length: " + result.length)
     return result
 }
+
+/**
+ * Extension function for LatinIME to replace all text in the input field.
+ */
+fun LatinIME.replaceFullText(newText: String) {
+    val ic = currentInputConnection ?: return
+    ic.beginBatchEdit()
+    val etr = ExtractedTextRequest()
+    val et = ic.getExtractedText(etr, 0)
+    if (et != null) {
+        // Select all text from start to end and replace it
+        ic.setSelection(0, et.text.length)
+        ic.commitText(newText, 1)
+    }
+    ic.endBatchEdit()
+}

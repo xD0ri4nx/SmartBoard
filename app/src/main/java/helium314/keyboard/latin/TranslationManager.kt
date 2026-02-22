@@ -43,8 +43,23 @@ object TranslationManager {
         onSuccess: (String) -> Unit,
         onError: (Exception) -> Unit
     ) {
+        var resolvedLang = TranslateLanguage.fromLanguageTag(sourceLang)
+        if (resolvedLang == null && sourceLang.contains("-")) {
+            val baseLang = sourceLang.split("-")[0]
+            resolvedLang = TranslateLanguage.fromLanguageTag(baseLang)
+            if (resolvedLang != null) {
+                Log.d(TAG, "Falling back from $sourceLang to $baseLang")
+            }
+        }
+
+        if (resolvedLang == null) {
+            onError(IllegalArgumentException("Unsupported language: $sourceLang"))
+            return
+        }
+        Log.d(TAG, "source language tag: $sourceLang, resolved: $resolvedLang")
+
         val options = TranslatorOptions.Builder()
-            .setSourceLanguage(sourceLang)
+            .setSourceLanguage(resolvedLang)
             .setTargetLanguage(TranslateLanguage.ROMANIAN)
             .build()
         val translator = Translation.getClient(options)

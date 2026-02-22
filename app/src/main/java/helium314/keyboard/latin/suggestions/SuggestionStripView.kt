@@ -38,6 +38,7 @@ import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.SuggestedWords
 import helium314.keyboard.latin.SuggestedWords.SuggestedWordInfo
+import helium314.keyboard.latin.TranslationManager
 import helium314.keyboard.latin.common.ColorType
 import helium314.keyboard.latin.common.Colors
 import helium314.keyboard.latin.common.Constants
@@ -59,6 +60,7 @@ import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.utils.removeFirst
 import helium314.keyboard.latin.utils.removePinnedKey
 import helium314.keyboard.latin.utils.setToolbarButtonsActivatedStateOnPrefChange
+import helium314.keyboard.latin.utils.showTranslateDialog
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
@@ -74,6 +76,8 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         fun onCodeInput(primaryCode: Int, x: Int, y: Int, isKeyRepeat: Boolean)
         fun removeSuggestion(word: String?)
         fun removeExternalSuggestions()
+        fun getFullInputText(): String
+        fun replaceFullText(text: String)
     }
 
     private val moreSuggestionsContainer: View
@@ -238,6 +242,34 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         startIndexOfMoreSuggestions = layoutHelper.layoutAndReturnStartIndexOfMoreSuggestions(
             context, suggestedWords, suggestionsStrip, this
         )
+        if (!suggestedWords.isEmpty) {
+            val translateBtn = TextView(context, null, R.attr.suggestionWordStyle).apply {
+                text = "Translate"
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                setOnClickListener {
+                    val inputText = listener.getFullInputText()
+                    if (inputText.isBlank()) return@setOnClickListener
+
+                    Log.d("TranslateBtn", "translate triggered, length: " + inputText.length)
+                    TranslationManager.translateText(
+                        input = inputText,
+                        onSuccess = { result ->
+                            showTranslateDialog(context, this@SuggestionStripView, result) {
+                                listener.replaceFullText(result)
+                            }
+                        },
+                        onError = { e ->
+                            Log.e("TranslateBtn", "translation error", e)
+                        }
+                    )
+                }
+            }
+            Log.d("TranslateBtn", "inflated")
+            suggestionsStrip.addView(translateBtn)
+        }
         isExternalSuggestionVisible = false
         updateKeys()
     }

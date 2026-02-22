@@ -33,6 +33,7 @@ import android.view.inputmethod.InlineSuggestion;
 import android.view.inputmethod.InlineSuggestionsRequest;
 import android.view.inputmethod.InlineSuggestionsResponse;
 import android.view.inputmethod.InputMethodSubtype;
+import android.view.inputmethod.InputConnection;
 
 import helium314.keyboard.accessibility.AccessibilityUtils;
 import helium314.keyboard.compat.ConfigurationCompatKt;
@@ -531,7 +532,6 @@ public class LatinIME extends InputMethodService implements
         mSettings.startListener();
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();
-        TranslationManager.getInstance().init();
         AudioAndHapticFeedbackManager.init(this);
         AccessibilityUtils.init(this);
         mStatsUtilsManager.onCreate(this, mDictionaryFacilitator);
@@ -833,7 +833,7 @@ public class LatinIME extends InputMethodService implements
         super.onStartInputView(editorInfo, restarting);
 
         mDictionaryFacilitator.onStartInput();
-        // Switch to the null consumer to handle cases leading to early exit below, for which we
+        // Switch to the null consumer to handle cases leading to early exit early early below, for which we
         // also wouldn't be consuming gesture data.
         mGestureConsumer = GestureConsumer.NULL_GESTURE_CONSUMER;
         mRichImm.refreshSubtypeCaches();
@@ -1551,6 +1551,26 @@ public class LatinIME extends InputMethodService implements
     public void removeExternalSuggestions() {
         setNeutralSuggestionStrip();
         mHandler.postResumeSuggestions(false);
+    }
+
+    @Override
+    @NonNull
+    public String getFullInputText() {
+        return LatinIMEExtensionsKt.getCurrentFullText(this);
+    }
+
+    @Override
+    public void replaceFullText(@NonNull String newText) {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) {
+            Log.d("ReplaceText", "IC is null");
+            return;
+        }
+        ic.beginBatchEdit();
+        ic.performContextMenuAction(android.R.id.selectAll);
+        ic.commitText(newText, 1);
+        ic.endBatchEdit();
+        Log.d("ReplaceText", "replaced with length: " + newText.length());
     }
 
     private void loadKeyboard() {
