@@ -125,6 +125,7 @@ dependencies {
     implementation("androidx.viewpager2:viewpager2:1.1.0")
 
     // ML Kit
+    implementation("com.google.mlkit:language-id:17.0.6")
     implementation("com.google.mlkit:translate:17.0.2")
 
     // kotlin
