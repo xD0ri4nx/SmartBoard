@@ -255,6 +255,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
                     Log.d("TranslateBtn", "translate triggered, length: " + inputText.length)
                     TranslationManager.translateText(
+                        context = context,
                         input = inputText,
                         onSuccess = { result ->
                             showTranslateDialog(context, this@SuggestionStripView, result) {
