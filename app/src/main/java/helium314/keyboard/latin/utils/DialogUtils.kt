@@ -6,6 +6,7 @@ import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.WindowManager
 import helium314.keyboard.latin.R
+import helium314.keyboard.latin.TranslationManager
 
 // todo: ideally the custom InputMethodPicker would be removed / replaced with compose dialog, then this can be removed
 fun getPlatformDialogThemeContext(context: Context): Context {
@@ -25,6 +26,33 @@ fun showTranslateDialog(context: Context, view: View, translatedText: String, on
         .setNegativeButton("Cancel", null)
         .create()
 
+    setupDialogWindow(dialog, view)
+    dialog.show()
+}
+
+/**
+ * Shows a dialog to select the target language.
+ */
+fun showLanguageSelectionDialog(context: Context, view: View, onLanguageSelected: (String, String) -> Unit) {
+    val languages = TranslationManager.getSupportedLanguages()
+    val names = languages.map { it.second }.toTypedArray()
+    val currentLang = TranslationManager.getTargetLanguage(context)
+    val currentIndex = languages.indexOfFirst { it.first == currentLang }.coerceAtLeast(0)
+
+    val dialog = AlertDialog.Builder(getPlatformDialogThemeContext(context))
+        .setTitle("Choose Target Language")
+        .setSingleChoiceItems(names, currentIndex) { d, which ->
+            onLanguageSelected(languages[which].first, languages[which].second)
+            d.dismiss()
+        }
+        .setNegativeButton("Cancel", null)
+        .create()
+
+    setupDialogWindow(dialog, view)
+    dialog.show()
+}
+
+private fun setupDialogWindow(dialog: AlertDialog, view: View) {
     dialog.window?.let { window ->
         window.setType(WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG)
         val lp = window.attributes
@@ -32,5 +60,4 @@ fun showTranslateDialog(context: Context, view: View, translatedText: String, on
         window.attributes = lp
         window.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
     }
-    dialog.show()
 }

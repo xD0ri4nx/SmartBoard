@@ -34,7 +34,6 @@ import helium314.keyboard.keyboard.KeyboardSwitcher
 import helium314.keyboard.keyboard.internal.KeyboardIconsSet
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode
 import helium314.keyboard.latin.AudioAndHapticFeedbackManager
-import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.SuggestedWords
 import helium314.keyboard.latin.SuggestedWords.SuggestedWordInfo
@@ -43,6 +42,7 @@ import helium314.keyboard.latin.common.ColorType
 import helium314.keyboard.latin.common.Colors
 import helium314.keyboard.latin.common.Constants
 import helium314.keyboard.latin.define.DebugFlags
+import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.settings.DebugSettings
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
@@ -60,6 +60,7 @@ import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.utils.removeFirst
 import helium314.keyboard.latin.utils.removePinnedKey
 import helium314.keyboard.latin.utils.setToolbarButtonsActivatedStateOnPrefChange
+import helium314.keyboard.latin.utils.showLanguageSelectionDialog
 import helium314.keyboard.latin.utils.showTranslateDialog
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
@@ -243,8 +244,29 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             context, suggestedWords, suggestionsStrip, this
         )
         if (!suggestedWords.isEmpty) {
+            // 1. Language selection button (e.g., "To: English")
+            val langBtn = TextView(context, null, R.attr.suggestionWordStyle).apply {
+                val currentLangCode = TranslationManager.getTargetLanguage(context)
+                val langName = TranslationManager.getSupportedLanguages().find { it.first == currentLangCode }?.second ?: "Română"
+                text = "To: $langName"
+                isClickable = true
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                setOnClickListener {
+                    showLanguageSelectionDialog(context, this@SuggestionStripView) { code, name ->
+                        TranslationManager.setTargetLanguage(context, code)
+                        text = "To: $name" // Update button text immediately
+                    }
+                }
+            }
+            suggestionsStrip.addView(langBtn)
+
+            // 2. Translate button
             val translateBtn = TextView(context, null, R.attr.suggestionWordStyle).apply {
                 text = "Translate"
+                isClickable = true
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
@@ -253,7 +275,6 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                     val inputText = listener.getFullInputText()
                     if (inputText.isBlank()) return@setOnClickListener
 
-                    Log.d("TranslateBtn", "translate triggered, length: " + inputText.length)
                     TranslationManager.translateText(
                         context = context,
                         input = inputText,
@@ -263,12 +284,12 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                             }
                         },
                         onError = { e ->
-                            Log.e("TranslateBtn", "translation error", e)
+                            Log.e("TranslateBtn", "Translation error", e)
+                            KeyboardSwitcher.getInstance().showToast("Translation failed: ${e.message}", true)
                         }
                     )
                 }
             }
-            Log.d("TranslateBtn", "inflated")
             suggestionsStrip.addView(translateBtn)
         }
         isExternalSuggestionVisible = false
